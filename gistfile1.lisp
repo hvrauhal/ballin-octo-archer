@@ -1,12 +1,11 @@
+
 ;;; Quickload
-(ql:quickload "cl-json")
-(ql:quickload "drakma")
+(ql:quickload '(cl-json drakma))
 
 ;;; Settings
 (defparameter *username* "cliffwarden")
-(setq drakma:*header-stream* nil)
-(setq drakma:*text-content-types* (cons '("application" . "json")
-                                        drakma:*text-content-types*))
+(setf drakma:*header-stream* nil)
+(push '("application" . "json") drakma:*text-content-types*)
 
 ;;; Utility
 (defun reddit-about-url (username)
@@ -14,8 +13,7 @@
 
 ;;; Functions
 (defun get-about (username)
-  (json:decode-json-from-string (drakma:http-request (reddit-about-url username\
-))))
+  (json:decode-json-from-string (drakma:http-request (reddit-about-url username))))
 
 (defun get-link-karma (about)
   (cdr (assoc :link--karma (cdr (assoc :data about)))))
