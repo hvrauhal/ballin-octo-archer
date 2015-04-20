@@ -33,4 +33,4 @@ Open a file, type `<esc-x> slime` and off you go!
 * [https://delicious.com/hvrauhal/codecamp](https://delicious.com/hvrauhal/codecamp)
 * [https://gist.github.com/shortsightedsid/a760e0d83a9557aaffcc](https://gist.github.com/shortsightedsid/a760e0d83a9557aaffcc)
 * [https://sites.google.com/site/sabraonthehill/home/json-libraries](https://sites.google.com/site/sabraonthehill/home/json-libraries)
-
+* [http://thehelpfulhacker.net/2011/07/10/checking-your-reddit-karma-with-common-lisp/](http://thehelpfulhacker.net/2011/07/10/checking-your-reddit-karma-with-common-lisp/)
