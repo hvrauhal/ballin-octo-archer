@@ -2,7 +2,8 @@
 
 ## Development environment
 
-    brew install sbcl
+    brew install emacs sbcl
+    brew linkapps
     rehash
     curl -O http://beta.quicklisp.org/quicklisp.lisp
 
