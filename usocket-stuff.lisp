@@ -34,22 +34,30 @@
 ; and use those values to send back data to our peer "client".
 (defparameter *current-server* t)
 
-(defun create-server (port buffer)
+(defun create-server (port)
   (let* ((socket (usocket:socket-connect nil nil
-					:protocol :datagram
-					:element-type '(unsigned-byte 8)
-					:local-host "127.0.0.1"
-					:local-port port)))
-	 (multiple-value-bind (buffer size client receive-port)
-	     (usocket:socket-receive socket buffer 8)
-	   (format t "~A~%" buffer)
-           (defparameter *current-server* socket)
-	   (usocket:socket-send socket (reverse buffer) size
-				:port receive-port
-				:host client))))
-(sb-thread:make-thread (lambda () (create-server 12321 (make-array 8 :element-type '(unsigned-byte 8)))))
+                                         :protocol :datagram
+                                         :element-type '(unsigned-byte 8)
+                                         :local-host "127.0.0.1"
+                                         :local-port port)))
+    (format t "Socket is now bound")
+    (defparameter *current-server* socket)
+    (multiple-value-bind (buffer size client receive-port)
+        (usocket:socket-receive socket nil 65507)
+      (format t "Got the buffer: ~A~%" buffer)
+      (usocket:socket-send socket (reverse buffer) size
+                           :port receive-port
+                           :host client))))
 
+(sb-thread:make-thread ;; thread function
+                       #'(lambda (standard-output)
+                           ;; thread-local dynamic binding of special variable
+                           (let ((*standard-output* standard-output))
+                             (create-server 12321)))
+                       ;; thread function argument, provided by the current thread
+                       :arguments (list *standard-output*))
 
+(usocket:socket-close *current-server*)
 
 
 ; Now for the sender/receiver. This part is pretty easy. Create a socket, 
@@ -63,13 +71,14 @@
 	 (progn
 	   (format t "Sending data~%")
 	   (replace buffer #(1 2 3 4 5 6 7 8))
-	   (format t "Receiving data~%")
 	   (usocket:socket-send socket buffer 8)
+	   (format t "Receiving data~%")
 	   (usocket:socket-receive socket buffer 8)
 	   (format t "~A~%" buffer))
       (usocket:socket-close socket))))
 
 (sb-thread:make-thread (lambda () (create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))))
+
 (create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))
 
 ; So, how do you run this? You need two REPLs - one for the server
