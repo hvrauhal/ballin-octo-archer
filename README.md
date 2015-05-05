@@ -24,12 +24,13 @@ Add the helper in the output to your Emacs' `init.el`
 
 Open a file, type `<esc-x> slime` and off you go!
 
-## Docs
+## Current state
 
-[http://quickdocs.org/](http://quickdocs.org/)
+Load the `server.lisp` and `client.lisp` into the REPL in that order
 
 ## Next
 
+* [http://quickdocs.org/](http://quickdocs.org/)
 * [http://www.gigamonkeys.com/book/](http://www.gigamonkeys.com/book/)
 * [https://delicious.com/hvrauhal/codecamp](https://delicious.com/hvrauhal/codecamp)
 * [https://gist.github.com/shortsightedsid/a760e0d83a9557aaffcc](https://gist.github.com/shortsightedsid/a760e0d83a9557aaffcc)
