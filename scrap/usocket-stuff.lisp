@@ -48,17 +48,36 @@
       (usocket:socket-send socket (reverse buffer) size
                            :port receive-port
                            :host client))))
+(defun udp-handler (buffer) 
+  (declare (type (simple-array (unsigned-byte 8) *) buffer))
+  (format t "Got a packet~A~%From~A:~A" buffer usocket:*remote-host* usocket:*remote-port*)
+  (defparameter *n-packages* (1+ *n-packages*))
+  buffer)
+
+(create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))
 
 (sb-thread:make-thread ;; thread function
                        #'(lambda (standard-output)
                            ;; thread-local dynamic binding of special variable
                            (let ((*standard-output* standard-output))
-                             (create-server 12321)))
+                             (format t "Starting the server...")
+                             (usocket:socket-server "127.0.0.1" 12321 #'udp-handler nil :protocol :datagram)
+                             (format t "Server done.")
+                             ))
                        ;; thread function argument, provided by the current thread
                        :arguments (list *standard-output*))
 
 (usocket:socket-close *current-server*)
 
+
+(ql:quickload "usocket")
+
+(defparameter *n-packages* 0)
+
+
+(defparameter *current-server* nil)
+
+*current-server*
 
 ; Now for the sender/receiver. This part is pretty easy. Create a socket, 
 ; send data on it and receive data back.
@@ -77,9 +96,8 @@
 	   (format t "~A~%" buffer))
       (usocket:socket-close socket))))
 
-(sb-thread:make-thread (lambda () (create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))))
 
-(create-client 12321 (make-array 8 :element-type '(unsigned-byte 8)))
+*n-packages*
 
 ; So, how do you run this? You need two REPLs - one for the server
 ; and one for the client. Load this file in both REPLs. Create the
