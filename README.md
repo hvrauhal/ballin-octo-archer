@@ -30,6 +30,7 @@ Load the `server.lisp` and `client.lisp` into the REPL in that order
 
 ## Next
 
+* [http://xach.livejournal.com/278047.html](http://xach.livejournal.com/278047.html)
 * [http://quickdocs.org/](http://quickdocs.org/)
 * [http://www.gigamonkeys.com/book/](http://www.gigamonkeys.com/book/)
 * [https://delicious.com/hvrauhal/codecamp](https://delicious.com/hvrauhal/codecamp)
