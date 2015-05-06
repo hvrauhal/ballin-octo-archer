@@ -1,9 +1,13 @@
 (ql:quickload '(usocket cl-json babel))
 
-(defun udp-handler (buffer) 
+
+(defun real-udp-handler (buffer)
   (declare (type (simple-array (unsigned-byte 8) *) buffer))
-  (format t "Got a packet~A~%From~A:~A~%" (json-octets-to-alist buffer) usocket:*remote-host* usocket:*remote-port*)
+  (format t "Got a packet: ~A~%From ~A:~A~%" (json-octets-to-alist buffer) usocket:*remote-host* usocket:*remote-port*)
   (alist-to-json-octets '((type . pong) (connection-id . "abcdef"))))
+
+(defun udp-handler-handle (buffer) 
+  (real-udp-handler buffer))
 
 (defun alist-to-json-octets (an-alist)
   (babel:string-to-octets (json:encode-json-alist-to-string an-alist) :encoding :utf-8))
@@ -21,6 +25,6 @@
  #'(lambda (standard-output)
      (let ((*standard-output* standard-output))
        (format t "Starting the server...")
-       (usocket:socket-server "127.0.0.1" 12321 #'udp-handler nil :protocol :datagram)
+       (usocket:socket-server "127.0.0.1" 12321 #'udp-handler-handle nil :protocol :datagram)
        (format t "Server done.")))
  :arguments (list *standard-output*))
