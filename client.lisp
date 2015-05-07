@@ -19,6 +19,8 @@
 
 (defun ip-addr-array-to-string (address-array) (format nil "~{~A~^.~}" (coerce address-array 'list)))
 
+(defparameter *run-client* t)
+
 (defun create-client (server-host server-port)
   (let ((socket (usocket:socket-connect server-host server-port
 					 :protocol :datagram
@@ -26,16 +28,19 @@
     (unwind-protect
 	 (progn
 	   (format t "C: Sending data~%")
-           (let* ((list-to-send (acons 'type 'connect (acons 'address (ip-addr-array-to-string (usocket:get-local-address socket)) (acons 'port (usocket:get-local-port socket) '()))))
+           (let* ((list-to-send (list (cons 'type 'connect) (cons 'address (ip-addr-array-to-string (usocket:get-local-address socket))) (cons 'port (usocket:get-local-port socket))))
                   (octet-array (alist-to-json-octets list-to-send))
                   (length-of-octet-array (array-total-size octet-array)))
              (usocket:socket-send socket octet-array length-of-octet-array))
-	   (format t "C: Receiving data~%")
-	   (multiple-value-bind (return-buffer return-length remote-host remote-port)
-               (usocket:socket-receive socket nil 65507)
-             (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer))
-             (usocket:socket-close socket))))))
-
+	   (loop while *run-client*
+                do (progn 
+             (format t "C: Receiving data~%")
+             (multiple-value-bind (return-buffer return-length remote-host remote-port)
+                 (usocket:socket-receive socket nil 65507)
+               (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer))
+               ))))
+      (usocket:socket-close socket))))
+  
 (create-client "127.0.0.1" 12321)
   
 ; {"type":"connect","address":"127.0.0.1","port":12321}
