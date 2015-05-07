@@ -1,31 +1,41 @@
 (ql:quickload '(usocket cl-json babel))
 
+(defparameter *debug* nil)
+
+(defun alist-to-json-octets (an-alist)
+  (let ((json-string (json:encode-json-alist-to-string an-alist)))
+    (if *debug* (format t "JSON string ~A~%" json-string))
+    (babel:string-to-octets json-string :encoding :utf-8)))
+
+(defun json-octets-to-alist (octets) 
+  (let ((a-the-json-string (babel:octets-to-string octets :encoding :utf-8)))
+    (json:decode-json-from-string a-the-json-string)))
+
 (defun udp-handler (buffer) 
   (declare (type (simple-array (unsigned-byte 8) *) buffer))
   (format t "Got a packet~A~%From~A:~A" (json-octets-to-alist buffer) usocket:*remote-host* usocket:*remote-port*)
   (defparameter *n-packages* (1+ *n-packages*))
   (alist-to-json-octets '((type . pong) (connection-id . "abcdef"))))
 
-(defun alist-to-json-octets (an-alist)
-  (babel:string-to-octets (json:encode-json-alist-to-string an-alist) :encoding :utf-8))
+(defun ip-addr-array-to-string (address-array) (format nil "~{~A~^.~}" (coerce address-array 'list)))
 
-(defun json-octets-to-alist (octets) 
-  (let ((a-the-json-string (babel:octets-to-string octets :encoding :utf-8)))
-    (json:decode-json-from-string a-the-json-string)))
-
-(defun create-client (port)
-  (let ((socket (usocket:socket-connect "127.0.0.1" port
+(defun create-client (server-host server-port)
+  (let ((socket (usocket:socket-connect server-host server-port
 					 :protocol :datagram
 					 :element-type '(unsigned-byte 8))))
     (unwind-protect
 	 (progn
-	   (format t "Sending data~%")
-           (let ((octet-array (alist-to-json-octets '((ping . pong)))))
-             (usocket:socket-send socket octet-array 17))
-	   (format t "Receiving data~%")
+	   (format t "C: Sending data~%")
+           (let* ((list-to-send (acons 'type 'connect (acons 'address (ip-addr-array-to-string (usocket:get-local-address socket)) (acons 'port (usocket:get-local-port socket) '()))))
+                  (octet-array (alist-to-json-octets list-to-send))
+                  (length-of-octet-array (array-total-size octet-array)))
+             (usocket:socket-send socket octet-array length-of-octet-array))
+	   (format t "C: Receiving data~%")
 	   (multiple-value-bind (return-buffer return-length remote-host remote-port)
                (usocket:socket-receive socket nil 65507)
-             (format t "Got obj ~A~%" (json-octets-to-alist return-buffer))
+             (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer))
              (usocket:socket-close socket))))))
 
-(create-client 12321)
+(create-client "127.0.0.1" 12321)
+  
+; {"type":"connect","address":"127.0.0.1","port":12321}
