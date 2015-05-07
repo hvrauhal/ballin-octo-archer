@@ -1,9 +1,11 @@
 (ql:quickload '(usocket cl-json babel))
 
+(defparameter *should-break* nil)
 
 (defun real-udp-handler (buffer)
   (declare (type (simple-array (unsigned-byte 8) *) buffer))
-  (format t "Got a packet: ~A~%From ~A:~A~%" (json-octets-to-alist buffer) usocket:*remote-host* usocket:*remote-port*)
+  (format t "S: Got a packet: ~A~%S: From ~A:~A~%" (json-octets-to-alist buffer) usocket:*remote-host* usocket:*remote-port*)
+  (if *should-break* (error "Done..."))
   (alist-to-json-octets '((type . pong) (connection-id . "abcdef"))))
 
 (defun udp-handler-handle (buffer) 
@@ -21,10 +23,12 @@
        (sample-as-alist (json-octets-to-alist sample-octets)))
   (cdr (assoc :type sample-as-alist)))
 
-(sb-thread:make-thread 
- #'(lambda (standard-output)
-     (let ((*standard-output* standard-output))
-       (format t "Starting the server...")
-       (usocket:socket-server "127.0.0.1" 12321 #'udp-handler-handle nil :protocol :datagram)
-       (format t "Server done.")))
- :arguments (list *standard-output*))
+(defun start-server () 
+  (sb-thread:make-thread 
+   #'(lambda (standard-output)
+       (let ((*standard-output* standard-output)
+             (port 12321))
+         (format t "S: Starting the server at port ~A~%" port)
+         (usocket:socket-server usocket:*wildcard-host* port #'udp-handler-handle nil :protocol :datagram)
+         (format t "S: Server done.")))
+   :arguments (list *standard-output*)))
