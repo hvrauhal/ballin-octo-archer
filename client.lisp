@@ -47,7 +47,7 @@
              (usocket:socket-send socket octet-array length-of-octet-array))
            (let ((game-socket (read-welcome-msg socket)))
              (loop while *run-client*
-                do (run-client-inner socket))))
+                do (run-client-inner game-socket))))
       (usocket:socket-close socket))))
   
 (create-client "127.0.0.1" 12321)
