@@ -28,11 +28,15 @@
       (format t "C: Got welcome msg foo ~A~%" welcome-msg-alist)
       socket)))
 
-(defun run-client-inner (socket) 
+(defun run-client-inner (socket)
   (format t "C: Receiving data~%")
   (multiple-value-bind (return-buffer return-length remote-host remote-port)
       (usocket:socket-receive socket nil 65507)
-    (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer))))
+    (let* ((server-msg (json-octets-to-alist return-buffer))
+           (msg-type (cdr (assoc :type server-msg))))
+      (if (equal "ping" msg-type)
+          (format t "C: type was ~A~%" msg-type)
+          (format t "C: Got unknown obj: ~A~%" server-msg)))))
 
 (defun create-client (server-host server-port)
   (let ((socket (usocket:socket-connect server-host server-port
