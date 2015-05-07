@@ -19,20 +19,25 @@
 
 (defun ip-addr-array-to-string (address-array) (format nil "~{~A~^.~}" (coerce address-array 'list)))
 
-(defparameter *run-client* nil)
+(defparameter *run-client* t)
 
 (defun read-welcome-msg (socket)
   (multiple-value-bind (return-buffer return-length remote-host remote-port)
       (usocket:socket-receive socket nil 65507)
     (let ((welcome-msg-alist (json-octets-to-alist return-buffer)))
-      
       (format t "C: Got welcome msg foo ~A~%" welcome-msg-alist)
       socket)))
 
+(defun run-client-inner (socket) 
+  (format t "C: Receiving data~%")
+  (multiple-value-bind (return-buffer return-length remote-host remote-port)
+      (usocket:socket-receive socket nil 65507)
+    (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer))))
+
 (defun create-client (server-host server-port)
   (let ((socket (usocket:socket-connect server-host server-port
-					 :protocol :datagram
-					 :element-type '(unsigned-byte 8))))
+                                        :protocol :datagram
+                                        :element-type '(unsigned-byte 8))))
     (unwind-protect
 	 (progn
 	   (format t "C: Sending data~%")
@@ -42,11 +47,7 @@
              (usocket:socket-send socket octet-array length-of-octet-array))
            (let ((game-socket (read-welcome-msg socket)))
              (loop while *run-client*
-                do (progn 
-                     (format t "C: Receiving data~%")
-                     (multiple-value-bind (return-buffer return-length remote-host remote-port)
-                         (usocket:socket-receive socket nil 65507)
-                       (format t "C: Got obj ~A~%" (json-octets-to-alist return-buffer)))))))
+                do (run-client-inner socket))))
       (usocket:socket-close socket))))
   
 (create-client "127.0.0.1" 12321)
